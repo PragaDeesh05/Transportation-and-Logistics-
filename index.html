@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transportation Services</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 </head>
 
 <body>
@@ -66,9 +68,11 @@
         <form id="trackingForm">
             <div class="input-container">
                 <input type="text" id="startLocation" placeholder="Enter Starting Location" required>
+                <div id="suggestions" class="suggestions-container"></div>
             </div>
             <div class="input-container">
                 <input type="text" id="destination" placeholder="Enter Destination" required>
+                <div id="destinationSuggestions" class="suggestions-container"></div>
             </div>
             <button type="button" id="findBuses">Find Buses</button>
         </form>
@@ -86,9 +90,11 @@
         <form id="carTrackingForm">
             <div class="input-container">
                 <input type="text" id="carStartLocation" placeholder="Enter Start Location" required>
+                <div id="carStartSuggestions" class="suggestions-container"></div>
             </div>
             <div class="input-container">
                 <input type="text" id="carStopLocation" placeholder="Enter Stop Location" required>
+                <div id="carStopSuggestions" class="suggestions-container"></div>
             </div>
             <button type="submit">Find Cars</button>
         </form>
@@ -109,7 +115,85 @@
         <p>&copy; 2024 TransportCo. All rights reserved.</p>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <style>
+        .suggestions-container {
+            border: 1px solid #ccc;
+            border-top: none;
+            display: none; /* Initially hidden */
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            position: absolute;
+            z-index: 1000;
+            width: calc(100% - 2px); /* Adjust width to match input */
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background: #f0f0f0;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const startLocationInput = document.getElementById("startLocation");
+            const destinationInput = document.getElementById("destination");
+            const findBusesButton = document.getElementById("findBuses");
+            const busNumbersContainer = document.getElementById("busNumbersContainer");
+            const busNumbersSelect = document.getElementById("busNumbersSelect");
+        
+            findBusesButton.addEventListener("click", function () {
+                const startLocation = startLocationInput.value.trim();
+                const destination = destinationInput.value.trim();
+        
+                if (!startLocation || !destination) {
+                    alert("Please enter both start location and destination.");
+                    return;
+                }
+        
+                // Send a POST request to the backend to get bus numbers
+                fetch("/find_buses", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        start: startLocation,
+                        destination: destination
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+        
+                    const busNumbers = data.bus_numbers;
+        
+                    if (busNumbers.length > 0) {
+                        busNumbersSelect.innerHTML = "";  // Clear previous options
+                        busNumbers.forEach(bus => {
+                            const option = document.createElement("option");
+                            option.value = bus;
+                            option.textContent = Bus Number: ${bus};
+                            busNumbersSelect.appendChild(option);
+                        });
+        
+                        busNumbersContainer.style.display = "block";  // Show the bus numbers container
+                    } else {
+                        alert("No buses available for this route.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching bus numbers:", error);
+                    alert("An error occurred while fetching bus numbers.");
+                });
+            });
+        });
+        </script>
 </body>
+
 
 </html>

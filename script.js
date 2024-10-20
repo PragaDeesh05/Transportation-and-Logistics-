@@ -1,13 +1,13 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const destinationInput = document.getElementById('destination');
-    const carStartLocationInput = document.getElementById('carStartLocation');
-    const carStopLocationInput = document.getElementById('carStopLocation');
-    const suggestionsContainer = document.getElementById('suggestions');
-    const carStartSuggestionsContainer = document.getElementById('carStartSuggestions');
-    const carStopSuggestionsContainer = document.getElementById('carStopSuggestions');
+document.addEventListener("DOMContentLoaded", function () {
+    const startLocationInput = document.getElementById("startLocation");
+    const destinationInput = document.getElementById("destination");
+    const carStartLocationInput = document.getElementById("carStartLocation");
+    const carStopLocationInput = document.getElementById("carStopLocation");
+    const findBusesButton = document.getElementById("findBuses");  // Get the button element
+    const busNumbersContainer = document.getElementById("busNumbersContainer");
+    const busNumbersSelect = document.getElementById("busNumbersSelect");
 
-    // Locations extracted from the PDF
-    const locations  = [
+    const locations = [
         "100 feet/GP",
         "Aalamaram - Vadavalli",
         "Aalandhurai",
@@ -292,120 +292,116 @@ document.addEventListener("DOMContentLoaded", () => {
         "Womens Polytechnic"
     ];
 
-    // Suggest locations for the bus tracking input
-    destinationInput.addEventListener('input', function () {
-        const query = destinationInput.value.trim().toLowerCase();
-        if (query.length > 0) {
-            const filteredLocations = locations.filter(location => location.toLowerCase().includes(query));
-            displaySuggestions(filteredLocations, suggestionsContainer);
-        } else {
-            clearSuggestions(suggestionsContainer);
-        }
-    });
+    function showSuggestions(input, suggestionsContainer) {
+        const inputValue = input.value.toLowerCase();
+        suggestionsContainer.innerHTML = "";
 
-    // Suggest locations for the car start location input
-    carStartLocationInput.addEventListener('input', function () {
-        const query = carStartLocationInput.value.trim().toLowerCase();
-        if (query.length > 0) {
-            const filteredLocations = locations.filter(location => location.toLowerCase().includes(query));
-            displaySuggestions(filteredLocations, carStartSuggestionsContainer);
-        } else {
-            clearSuggestions(carStartSuggestionsContainer);
-        }
-    });
+        if (inputValue) {
+            const filteredLocations = locations.filter(location =>
+                location.toLowerCase().startsWith(inputValue)
+            );
 
-    // Suggest locations for the car stop location input
-    carStopLocationInput.addEventListener('input', function () {
-        const query = carStopLocationInput.value.trim().toLowerCase();
-        if (query.length > 0) {
-            const filteredLocations = locations.filter(location => location.toLowerCase().includes(query));
-            displaySuggestions(filteredLocations, carStopSuggestionsContainer);
-        } else {
-            clearSuggestions(carStopSuggestionsContainer);
-        }
-    });
-
-    // Display location suggestions in the provided container
-    function displaySuggestions(suggestions, container) {
-        container.innerHTML = '';
-        if (suggestions.length > 0) {
-            container.style.display = 'block'; // Show the suggestion box
-            suggestions.forEach(suggestion => {
-                const suggestionItem = document.createElement('div');
-                suggestionItem.classList.add('suggestion-item');
-                suggestionItem.textContent = suggestion;
-                suggestionItem.addEventListener('click', () => selectSuggestion(suggestion, container));
-                container.appendChild(suggestionItem);
+            filteredLocations.forEach(location => {
+                const suggestionItem = document.createElement("div");
+                suggestionItem.classList.add("suggestion-item");
+                suggestionItem.textContent = location;
+                suggestionItem.onclick = function () {
+                    input.value = location;
+                    suggestionsContainer.innerHTML = ""; // Clear suggestions
+                    suggestionsContainer.style.display = "none"; // Hide suggestions
+                };
+                suggestionsContainer.appendChild(suggestionItem);
             });
+
+            suggestionsContainer.style.display = filteredLocations.length ? "block" : "none";
         } else {
-            clearSuggestions(container);
+            suggestionsContainer.style.display = "none";
         }
     }
 
-    // Handle suggestion selection
-    function selectSuggestion(selectedLocation, container) {
-        if (container === suggestionsContainer) {
-            if (selectedLocation === carStartLocationInput.value) {
-                alert("Starting location cannot be the same as the destination.");
-            } else {
-                destinationInput.value = selectedLocation; // Set input to the selected location
-            }
-        } else if (container === carStartSuggestionsContainer) {
-            if (selectedLocation === carStopLocationInput.value) {
-                alert("Start location cannot be the same as the stop location.");
-            } else {
-                carStartLocationInput.value = selectedLocation; // Set input for car start
-            }
-        } else if (container === carStopSuggestionsContainer) {
-            if (selectedLocation === carStartLocationInput.value) {
-                alert("Stop location cannot be the same as the start location.");
-            } else {
-                carStopLocationInput.value = selectedLocation; // Set input for car stop
-            }
-        }
-        clearSuggestions(container);
-    }
+    // Event listeners for bus tracking inputs
+    startLocationInput.addEventListener("input", function () {
+        const suggestionsContainer = document.getElementById("suggestions");
+        showSuggestions(startLocationInput, suggestionsContainer);
+    });
 
-    // Clear suggestions for a specific container
-    function clearSuggestions(container) {
-        container.innerHTML = '';
-        container.style.display = 'none'; // Hide the suggestion box
-    }
+    destinationInput.addEventListener("input", function () {
+        const suggestionsContainer = document.getElementById("destinationSuggestions");
+        showSuggestions(destinationInput, suggestionsContainer);
+    });
 
-    // Add event listeners for form submissions (tracking form)
-    const trackingForm = document.getElementById('trackingForm');
-    trackingForm.addEventListener('submit', function (e) {
-        e.preventDefault();
+    // Event listeners for car tracking inputs
+    carStartLocationInput.addEventListener("input", function () {
+        const suggestionsContainer = document.getElementById("carStartSuggestions");
+        showSuggestions(carStartLocationInput, suggestionsContainer);
+    });
+
+    carStopLocationInput.addEventListener("input", function () {
+        const suggestionsContainer = document.getElementById("carStopSuggestions");
+        showSuggestions(carStopLocationInput, suggestionsContainer);
+    });
+
+    // Event listener for the "Find Buses" button
+    findBusesButton.addEventListener("click", function () {
+        const startLocation = startLocationInput.value.trim();
         const destination = destinationInput.value.trim();
-        if (destination) {
-            findBusesByDestination(destination);
+
+        if (!startLocation || !destination) {
+            alert("Please enter both start location and destination.");
+            return;
+        }
+
+        // Simulate fetching bus numbers (replace this with your actual API logic)
+        const busNumbers = ["22", "35A", "62"];  // Example bus numbers
+
+        if (busNumbers.length > 0) {
+            busNumbersSelect.innerHTML = "";  // Clear previous options
+            busNumbers.forEach(bus => {
+                const option = document.createElement("option");
+                option.value = bus;
+                option.textContent = Bus Number: ${bus};
+                busNumbersSelect.appendChild(option);
+            });
+
+            busNumbersContainer.style.display = "block";  // Show the bus numbers container
+        } else {
+            alert("No buses available for this route.");
         }
     });
+});
+document.getElementById('findBuses').addEventListener('click', function() {
+    const startLocation = document.getElementById('startLocation').value;
+    const destination = document.getElementById('destination').value;
 
-    // Function to find buses by destination
-    function findBusesByDestination(destination) {
-        // Replace this with your actual API request or logic to fetch bus routes
-        fetch(`/api/findBuses?destination=${destination}`)
-            .then(response => response.json())
-            .then(data => {
-                displayBuses(data, destination);
-            })
-            .catch(error => {
-                console.error("Error fetching bus routes:", error);
-                suggestionsContainer.innerHTML = `<p>No buses found for ${destination}.</p>`;
-            });
-    }
-
-    // Function to display bus routes
-    function displayBuses(buses, destination) {
-        const destinationInfo = document.getElementById('destination-info');
-        if (buses.length > 0) {
-            let busList = buses.map(bus => `<li>Bus Number: ${bus.number}, Route: ${bus.route}</li>`).join('');
-            destinationInfo.innerHTML = `<h3>Buses to ${destination}:</h3><ul>${busList}</ul>`;
-        } else {
-            destinationInfo.innerHTML = `<p>No buses found for ${destination}.</p>`;
+    fetch('/track-bus', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            startLocation: startLocation,
+            destination: destination
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
-    }
-    console.log('Script loaded');
-
+        return response.json();
+    })
+    .then(data => {
+        const busNumbersSelect = document.getElementById('busNumbersSelect');
+        busNumbersSelect.innerHTML = ''; // Clear previous options
+        data.busNumbers.forEach(busNumber => {
+            const option = document.createElement('option');
+            option.value = busNumber;
+            option.textContent = busNumber;
+            busNumbersSelect.appendChild(option);
+        });
+        document.getElementById('busNumbersContainer').style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error fetching bus numbers:', error);
+        alert('An error occurred while fetching bus numbers.');
+    });
 });

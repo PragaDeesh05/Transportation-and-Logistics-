@@ -43,6 +43,8 @@
     <div id="map"></div>
     <div id="route-info">
         <h3>Available Routes</h3>
+        <label for="from">From (Enter Starting Location):</label>
+        <input type="text" id="from" placeholder="Enter starting location" />
         <label for="to">To (Enter Destination):</label>
         <input type="text" id="to" placeholder="Enter destination location" />
         <button id="getRoute">Get Route</button>
@@ -66,7 +68,6 @@
         // Add geocoder
         const geocoder = L.Control.Geocoder.nominatim();
         let currentLocationMarker;
-        map.routeLayers = []; // Initialize an array to hold route layers
 
         // Get user's current location
         if (navigator.geolocation) {
@@ -104,14 +105,17 @@
             fetch(osrmUrl)
                 .then(response => response.json())
                 .then(data => {
+                    console.log(data); // Log the response for debugging
+
                     // Clear previous routes from the side panel
                     document.getElementById('routes').innerHTML = '';
 
-                    if (data.routes.length > 0) {
+                    if (data.routes && data.routes.length > 0) {
                         // Clear any existing routes on the map
                         if (map.routeLayers) {
                             map.routeLayers.forEach(layer => map.removeLayer(layer));
                         }
+                        map.routeLayers = []; // Initialize an array to hold route layers
 
                         // Display all alternative routes
                         data.routes.forEach((route, index) => {
@@ -128,16 +132,14 @@
                             }).addTo(map);
                             map.routeLayers.push(routeLayer); // Store the layer for later removal
 
-                            // Display distance and duration in the side panel
+                            // Display distance in the side panel
                             const distance = (route.distance / 1000).toFixed(2); // Convert meters to kilometers
-                            const duration = (route.duration / 60).toFixed(2);  // Convert seconds to minutes
 
                             const routeDiv = document.createElement('div');
                             routeDiv.classList.add('route');
                             routeDiv.innerHTML = `
                                 <h4>Route ${index + 1}</h4>
                                 <p>Distance: ${distance} km</p>
-                                <p>Duration: ${duration} minutes</p>
                             `;
                             document.getElementById('routes').appendChild(routeDiv);
                         });
@@ -152,28 +154,31 @@
 
         // Event listener for "Get Route" button
         document.getElementById('getRoute').addEventListener('click', function() {
+            const fromPlace = document.getElementById('from').value;
             const toPlace = document.getElementById('to').value;
 
-            if (!toPlace) {
-                alert('Please enter the destination.');
+            if (!fromPlace || !toPlace) {
+                alert('Please enter both starting and destination locations.');
                 return;
             }
 
-            // Get coordinates of the destination
-            getCoordinates(toPlace, function(end) {
-                if (!currentLocationMarker) {
-                    alert('Current location is not available yet.');
-                    return;
-                }
+            // Get coordinates of the starting location
+            getCoordinates(fromPlace, function(start) {
+                // Get coordinates of the destination
+                getCoordinates(toPlace, function(end) {
+                    if (!currentLocationMarker) {
+                        alert('Current location is not available yet.');
+                        return;
+                    }
 
-                const start = currentLocationMarker.getLatLng(); // Get user's current location
-                map.fitBounds([start, end]); // Fit map to show both locations
+                    const userStart = currentLocationMarker.getLatLng(); // Get user's current location
+                    map.fitBounds([userStart, end]); // Fit map to show both locations
 
-                // Get and display routes from current location to destination
-                getRoutes(start, end);
+                    // Get and display routes from starting location to destination
+                    getRoutes(start, end);
+                });
             });
         });
-
     </script>
 
 </body>
